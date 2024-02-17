@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Run First IL2 GB Install
+Comment=
+Exec=bash il2-gb-dedicated-server-automatic-installer.sh
+Icon=/app/il2_gb_server/desktop-setup/il2_tux.png
+Path=/app/il2_gb_server/wine-dedicated-il2-gb-automated-installer/
+Terminal=true
+StartupNotify=false

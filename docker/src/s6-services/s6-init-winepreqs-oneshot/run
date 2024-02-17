@@ -22,17 +22,62 @@ cat /etc/s6-overlay/s6-rc.d/init-winepreqs-oneshot/branding
 # Wait for volumes to be fully mounted.
 sleep 5
 
+sudo mkdir -p /config/.wine && sudo chown abc:users -R /config/.wine
+sudo mkdir -p /config/.cache && sudo chown abc:users -R /config/.cache
+
 # Ensure that the wine prefix is owned by the user from the container.
 lsiown -R abc:users /config/.wine | output_to_log
 lsiown -R abc:users /config/.cache | output_to_log
 
-sudo -u abc winecfg
+export SESSION_MANAGER=local/il2-gb-dedicated-server
+export DISPLAY=:1.0
+
+# Download the latest wine mono
+# Tarball method
+mkdir -p /config/mono/
+sudo ln -sfn /config/mono /usr/share/wine/mono
+
+WINE_MONO_CHKSUM="d73d440c08ebd67c93fbd6534f4f1b4e98aa07342f9c7d98c8aaeb74755eb9cf"
+if [ -f "/config/mono/wine-mono-9.0.0-x86.tar.xz" ]; then
+    LOCAL_FILE_CHKSUM=$(sha256sum /config/mono/wine-mono-9.0.0-x86.tar.xz | awk '{print $1}')
+    
+    if [ $LOCAL_FILE_CHKSUM == $WINE_MONO_CHKSUM ]; then
+        echo "Wine Mono already present" | output_to_log
+    else
+        echo "Wine Mono wrong checksum $LOCAL_FILE_CHKSUM $WINE_MONO_CHKSUM" | output_to_log
+        wget -O /config/mono/wine-mono-9.0.0-x86.tar.xz https://dl.winehq.org/wine/wine-mono/9.0.0/wine-mono-9.0.0-x86.tar.xz
+        tar -xf /config/mono/wine-mono-9.0.0-x86.tar.xz -C /config/mono/
+        sudo chown abc:users -R /config/mono
+    fi
+else
+    echo "Wine Mono doesn't exist" | output_to_log
+    wget -O /config/mono/wine-mono-9.0.0-x86.tar.xz https://dl.winehq.org/wine/wine-mono/9.0.0/wine-mono-9.0.0-x86.tar.xz
+    tar -xf /config/mono/wine-mono-9.0.0-x86.tar.xz -C /config/mono/
+    sudo chown abc:users -R /config/mono
+fi
+
+#sudo -u abc winecfg
+
+# Give raw packet capabilities to wine
+sudo setcap cap_net_raw+eip /usr/bin/wine-preloader
+
+export WINEDEBUG=fixme-all,-d3d
+
+# Install mono from source
+#TODO
 
 # Install the wine dependencies.
 # Note that this will not reinstall the dependencies if they are already installed.
-sudo -u abc /usr/bin/winetricks --unattended d3dcompiler_43 | output_to_log
-sudo -u abc /usr/bin/winetricks --unattended d3dx11_43 | output_to_log
-sudo -u abc /usr/bin/winetricks --unattended d3dcompiler_47 | output_to_log
-sudo -u abc /usr/bin/winetricks --unattended win10 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended dotnet48 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended vcrun2017 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended d3dcompiler_43 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended d3dx11_43 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended d3dcompiler_47 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended win10 | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended corefonts | output_to_log
+sudo -u abc xfce4-terminal --execute /usr/bin/winetricks --unattended dxvk | output_to_log
+echo "Wine PreReqs set up / verified" | output_to_log
+IP=$(ip route get 8.8.8.8 | awk -F"src " 'NR==1{split($2,a," ");print a[1]}')
+echo "Container main IP is $IP" | output_to_log
 echo "Exiting" | output_to_log
 exit 0

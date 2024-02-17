@@ -1,43 +1,62 @@
 version: '3.3'
 services:
-  dcs-world-dedicated-server:
-    container_name: dcs-world-dedicated-server
-    hostname: dcs-world-dedicated-server
+  il2-gb-dedicated-server:
+    container_name: il2-gb-dedicated-server
+    hostname: il2-gb-dedicated-server
+    cap_add:
+      - NET_RAW
     environment:
       - PUID=$PUID
       - PGID=$PGID
       - TZ=$TZ
       - PASSWORD=$VNCPASSWORD
-      - DCSAUTOINSTALL=${DCSAUTOINSTALL:-0}
-      - DCSMODULES=${DCSMODULES:-}
+      - IL2GBAUTOINSTALL=${IL2GBAUTOINSTALL:-0}
       - FORCEREINSTALL=${FORCEREINSTALL:-0}
       - AUTOSTART=${AUTOSTART:-0}
+      - AUTOSTARTSDS=$AUTOSTARTSDS
+      - SRSAUTOSTART=${SRSAUTOSTART:-0}
       - TIMEOUT=${TIMEOUT:-30}
     ports:
       # Webtop WebGUI ports    
       - '3000:3000/tcp' # Webtop HTTP port - TCP only.
       - '3001:3001/tcp' # Webtop HTTPs port - TCP only.
 
-      # DCS server Ports      
-      - '10308:10308/tcp' # Multiplayer game traffic - TCP.
-      - '10308:10308/udp' # Multiplayer game traffic - UDP.      
-      #- '10309:10309/tcp' # Multiplayer game VOIP traffic - TCP - Uncomment if in game VOIP is desired.
-      #- '10309:10309/udp' # Multiplayer game VOIP traffic - UDP - Uncomment if in game VOIP is desired.      
-      #- '8088:8088' # Uncomment to enable remote web control webGUI from the Eagle Dynamics website - TCP only.
+      # IL2 GB server Ports      
+      - '28000:28000/tcp' # Multiplayer game traffic - TCP.
+      - '28000:28000/udp' # Multiplayer game traffic - UDP.      
+      - '28100:28100/tcp' # Multiplayer asset download traffic - TCP only.
+      - '8991:8991/tcp' # Uncomment to enable remote console (don't forget to manually edit IP in SDS) - TCP only.
 
-      # Tacview ports
-      #- '42674:42674/tcp' # Uncomment to enable TacView Real-time Telemetry if in use - TCP only.
-      #- '42675:42675/tcp' # Uncomment to enable TacView Remote Control if in use - TCP only.
-
-      # DCS SimpleRadio Standalone (DCS-SRS) ports
-      #- '5002:5002/tcp' # Uncomment to enable DCS SimpleRadio Standalone (DCS-SRS) - TCP and UDP.
-      #- '5002:5002/udp' # Uncomment to enable DCS SimpleRadio Standalone (DCS-SRS) - TCP and UDP.      
+      # IL2 SimpleRadio Standalone (IL2-SRS) ports
+      - '6002:6002/tcp' # Uncomment to enable IL2 SimpleRadio Standalone (IL2-SRS) - TCP and UDP.
+      - '6002:6002/udp' # Uncomment to enable IL2 SimpleRadio Standalone (IL2-SRS) - TCP and UDP.      
     volumes:
-      - '${HOME}/dcs-world-dedicated-server:/config/'
+      - '${HOME}/il2-gb-dedicated-server:/config/'
     # Setting seccomp to unconfined with security_opt is necessary if you encounter 'Failed to execute child process "bash": Failed to fdwalk: Operation not permitted' errors.
     # You should not unconfine unless necessary.
     # See also: https://docs.linuxserver.io/images/docker-webtop/#application-setup
     #security_opt:
       #- seccomp=unconfined
+    networks:
+      manage-0-net:
+        ipv4_address: 172.16.200.20
+      #il2-0-net:
+        #ipv4_address: 192.168.0.232
     restart: always
-    image: aterfax/dcs-world-dedicated-server
+    image: serverror/il2-gb-dedicated-server
+
+networks:
+  manage-0-net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.200.0/24"
+#  il2-0-net: # The bridge driver doesn't play well with IL2's DServer if connecting within the same LAN
+#    driver: macvlan
+#    driver_opts:
+#      parent: eno1
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 192.168.0.0/24
+#          gateway: 192.168.0.1

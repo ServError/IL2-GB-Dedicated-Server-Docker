@@ -35,11 +35,13 @@ copy_if_hash_differs() {
 # Wait for volumes to be fully mounted.
 sleep 5
 
+sudo mkdir -p /config/Desktop && sudo chown abc:users -R /config/Desktop
+
 # Ensure that the wine prefix is owned by the user from the container.
 lsiown -R abc:users /config/Desktop | output_to_log
 
 # copy_if_hash_differs SRC DEST
-copy_if_hash_differs "/app/dcs_server/desktop-setup/Run_DCS_Install.desktop" "/config/Desktop/Run_DCS_Install.desktop"
+copy_if_hash_differs "/app/il2_gb_server/desktop-setup/Run_IL2_GB_Install.desktop" "/config/Desktop/Run_IL2_GB_Install.desktop"
 
 echo "Exiting" | output_to_log
 exit 0

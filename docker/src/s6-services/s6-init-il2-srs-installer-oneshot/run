@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+# Define a logging function to prefix output to the docker logs.
+output_to_log() {
+    sed  's/^/[s6-init-il2-srs-installer-oneshot] /'
+}
+
+# Set up error handling
+handle_error() {
+    local exit_code="$?"
+    echo -e "Error occurred (Exit code: $exit_code)" | output_to_log
+    exit "$exit_code"
+}
+trap handle_error ERR
+
+download_il2_srs_server() {
+    local MAX_RETRIES=3
+    local RETRY_COUNT=0
+    while [ "$RETRY_COUNT" -lt "$MAX_RETRIES" ]; do
+        echo -e "IL2 SRS Server download required. Downloading..." | output_to_log
+        wget --progress=bar:force -O "$DOWNLOAD_PATH" "$URL" || true
+        lsiown abc:users $DOWNLOAD_PATH | output_to_log
+        # Check if the MD5 checksum matches
+        DOWNLOADED_SHA256SUM=$(sha256sum $DOWNLOAD_PATH | awk '{print $1}')
+        if [ "$DOWNLOADED_SHA256SUM" == "$SHA256SUM" ]; then
+            echo -e "Download successful. SHA256 checksum matches." | output_to_log
+            mkdir -p '/config/.wine/drive_c/Program Files/IL2-SimpleRadio-Standalone/'
+            unzip -oq -d '/config/.wine/drive_c/Program Files/IL2-SimpleRadio-Standalone/' $DOWNLOAD_PATH
+            break
+        else
+            echo -e "Download failed. SHA256 checksum does not match. Retrying in 5 seconds..." | output_to_log
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 5
+        fi
+    done
+    if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
+        echo -e "Download retry count exceeded. Downloading failed." | output_to_log
+        rm -f $DOWNLOAD_PATH
+    fi
+}
+
+# Enable immediate exit on error
+set -e
+
+URL="https://github.com/ciribob/IL2-SimpleRadioStandalone/releases/download/1.0.2.0/IL2-SimpleRadioStandalone-1.0.2.0.zip"
+DOWNLOAD_PATH="/config/IL2-SimpleRadioStandalone-1.0.2.0.zip"
+
+SHA256SUM=dccbdde6d19c0c29d79b73d437e7a16cded3902b91fc04ed40ef248f68696bf3
+DOWNLOADED_SHA256SUM=$(sha256sum "$DOWNLOAD_PATH" | awk '{print $1}')
+
+# Check if the file exists then download.
+if [ "$DOWNLOADED_SHA256SUM" == "$SHA256SUM" ]; then
+    echo -e "SRS package matches the correct checksum. Download not needed. " | output_to_log
+    echo "Exiting" | output_to_log
+    exit 0
+else
+    download_il2_srs_server
+    echo "Exiting" | output_to_log
+    exit 0
+fi
+
+# You should never get here.
+echo "Exiting" | output_to_log
+exit 0

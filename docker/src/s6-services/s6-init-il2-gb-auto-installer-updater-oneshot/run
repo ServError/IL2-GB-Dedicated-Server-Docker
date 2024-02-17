@@ -3,7 +3,7 @@
 
 # Define a logging function to prefix output to the docker logs.
 output_to_log() {
-    sed  's/^/[s6-init-dcs-auto-installer-updater-oneshot] /'
+    sed  's/^/[s6-init-il2-gb-auto-installer-updater-oneshot] /'
 }
 
 # Set up error handling
@@ -16,7 +16,7 @@ trap handle_error ERR
 
 # Function for autoinstall
 autoinstall() {
-    sudo -E -u abc /app/dcs_server/wine-dedicated-dcs-automated-installer/dcs-dedicated-server-automatic-installer.sh | output_to_log
+    sudo -u abc /app/il2_gb_server/wine-dedicated-il2-gb-automated-installer/il2-gb-dedicated-server-automatic-installer.sh | output_to_log
     exit 0
 }
 
@@ -26,19 +26,19 @@ autoupdate() {
     autoinstall
 }
 
-install_folder_path="/config/.wine/drive_c/Program Files/Eagle Dynamics"
+install_folder_path="/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles"
 
-# Get/set default value for DCSAUTOINSTALL if not already set
-DCSAUTOINSTALL="${DCSAUTOINSTALL:-0}"
-echo -e "DCSAUTOINSTALL=$DCSAUTOINSTALL" | output_to_log
+# Get/set default value for IL2GBAUTOINSTALL if not already set
+IL2GBAUTOINSTALL="${IL2GBAUTOINSTALL:-0}"
+echo -e "IL2GBAUTOINSTALL=$IL2GBAUTOINSTALL" | output_to_log
 
 # Get/set default value for FORCEREINSTALL if not already set
 FORCEREINSTALL="${FORCEREINSTALL:-0}"
 echo -e "FORCEREINSTALL=$FORCEREINSTALL" | output_to_log
 
-# Check if DCSAUTOINSTALL is set to 1 and do so.
-if [ "$DCSAUTOINSTALL" -eq 1 ]; then
-    echo -e "DCS auto install requested." | output_to_log
+# Check if IL2GBAUTOINSTALL is set to 1 and do so.
+if [ "$IL2GBAUTOINSTALL" -eq 1 ]; then
+    echo -e "IL2GB auto install requested." | output_to_log
     if [ "$FORCEREINSTALL" -eq 1 ]; then
         # A force reinstall request
         echo -e "Force reinstall requested." | output_to_log
@@ -46,7 +46,7 @@ if [ "$DCSAUTOINSTALL" -eq 1 ]; then
         if [ -d "$install_folder_path" ]; then
             echo "Removing detected previous installation." | output_to_log
             rm -rf "$install_folder_path"
-            find /config/Desktop/ -name '*.desktop' ! -name 'Run_DCS_Install.desktop' -delete
+            find /config/Desktop/ -name '*.desktop' ! -name 'Run_IL2_GB_Install.desktop' -delete
             autoinstall
         else
             echo "No previous installation detected." | output_to_log
@@ -60,7 +60,7 @@ if [ "$DCSAUTOINSTALL" -eq 1 ]; then
 fi
 
 # If we get here then we must be updating
-if [ "$DCSAUTOINSTALL" -eq 1 ]; then
+if [ "$IL2GBAUTOINSTALL" -eq 1 ]; then
     autoupdate
     exit 0
 fi

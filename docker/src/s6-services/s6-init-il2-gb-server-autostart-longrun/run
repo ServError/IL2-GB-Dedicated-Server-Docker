@@ -1,0 +1,98 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+# Define a logging function to prefix output to the docker logs.
+output_to_log() {
+    sed  's/^/[s6-init-il2-gb-server-autostart-longrun] /'
+}
+
+# Set up error handling
+handle_error() {
+    local exit_code="$?"
+    echo -e "Error occurred (Exit code: $exit_code)"  | output_to_log
+    exit "$exit_code"
+}
+trap handle_error ERR
+
+# Get / set timeout value for server check interval.
+AUTOSTART="${AUTOSTART:-0}"
+TIMEOUT="${TIMEOUT:-30}"
+
+install_folder_path="/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles"
+if [ ! -d "$install_folder_path" ]; then
+    echo "No installation detected. Cannot autostart. Exiting" | output_to_log
+    sleep $TIMEOUT
+    exit 1
+fi
+
+if [ "$SRSAUTOSTART" -ne 1 ]; then
+    #echo "SRSAUTOSTART is not set to 1. Server will not autostart. Exiting." | output_to_log
+    sleep $TIMEOUT
+    exit 1
+fi
+
+if [ "$AUTOSTART" -ne 1 ]; then
+    #echo "AUTOSTART is not set to 1. Server will not autostart. Exiting." | output_to_log
+    sleep $TIMEOUT
+    exit 1
+fi
+
+
+while true; do
+startup_iterator=1
+pid=""
+    if [ $startup_iterator -eq 1 ]; then
+        # Verify that updater isn't running.
+        if pidof -qx launcher.exe; then
+            echo "Launcher active. Autostart paused" | output_to_log
+            sleep $TIMEOUT
+        elif [[ $(pidof -x DServer.exe) -ne $pid ]]; then
+            echo "Untracked DServer found. Adopting." | output_to_log
+            pid=$(pidof -x DServer.exe)
+            echo "Server PID="$pid | output_to_log
+            startup_iterator=0
+            #echo "Sleeping: $TIMEOUT"
+            sleep $TIMEOUT
+        else
+            echo "Starting IL2 GB Server. AUTOSTARTSDS is $AUTOSTARTSDS" | output_to_log
+            cd "/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/"
+            sudo -u abc wine "C:\Program Files\IL-2 Sturmovik Great Battles\bin\game\DServer.exe" "..\..\data\Multiplayer\\$AUTOSTARTSDS" &
+            sleep 3
+            pid=$(pidof -x DServer.exe) #$! # This grabs the PID of the running Sneaker process and keeps it for later if needed.
+            echo "Server PID="$pid | output_to_log
+
+            if [ "$SRSAUTOSTART" -ne 0 ]; then
+                if [ -f '/config/.wine/drive_c/Program Files/IL2-SimpleRadio-Standalone/IL2-SR-Server.exe' ]; then
+                    if [ -z $(pidof -x IL2-SR_Server.exe) ]; then
+                        cd "/config/.wine/drive_c/Program Files/IL2-SimpleRadio-Standalone/"
+                        sudo -u abc wine "C:\Program Files\IL2-SimpleRadio-Standalone\IL2-SR-Server.exe" &
+                        echo "SRS started" | output_to_log
+                    fi
+                else
+                    echo "SRS autostart requested, but not installed" | output_to_log
+                fi
+            fi
+
+            startup_iterator=0
+            #echo "Sleeping: $TIMEOUT"
+            sleep $TIMEOUT
+        fi
+    fi
+
+    while [ $startup_iterator -eq 0 ]; do
+        # Check if the service is still alive.
+        if [ -z "$pid" ]; then
+            echo "############### Server not started yet. ###############" | output_to_log
+            #echo "Sleeping: $TIMEOUT"
+            sleep $TIMEOUT
+        elif ps -p "$pid" > /dev/null; then
+            echo "############### Server still running. ###############" $(date +"%d-%m-%y-%T") | output_to_log
+            #echo "Sleeping: $TIMEOUT"
+            sleep $TIMEOUT
+        else
+            startup_iterator=1
+            restarts=$((restarts + 1))
+            break # Restart server
+        fi
+    done
+done

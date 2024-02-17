@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+# Define a logging function to prefix output to the docker logs.
+output_to_log() {
+    sed  's/^/[s6-init-getlatest-il2-gb-installer-oneshot] /'
+}
+
+# Set up error handling
+handle_error() {
+    local exit_code="$?"
+    echo -e "Error occurred (Exit code: $exit_code)" | output_to_log
+    exit "$exit_code"
+}
+trap handle_error ERR
+
+download_il2_gb_server() {
+    local MINIMUM_SIZE=150000000
+    local MAX_RETRIES=3
+    local RETRY_COUNT=0
+    while [ "$RETRY_COUNT" -lt "$MAX_RETRIES" ]; do
+        echo -e "New IL2 GB Server download required. Downloading..." | output_to_log
+        wget --progress=bar:force -O "$DOWNLOAD_PATH" "$URL" || true
+        lsiown abc:users $DOWNLOAD_PATH | output_to_log
+
+        DOWNLOADED_SIZE=$(stat -c%s $DOWNLOAD_PATH | awk '{print $1}')
+        if [ "$DOWNLOADED_SIZE" -gt "$MINIMUM_SIZE" ]; then
+            echo -e "Download successful. Size check passed." | output_to_log
+            break
+        else
+            echo -e "Download failed. Size check failed. Retrying in 5 seconds..." | output_to_log
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 5
+        fi
+    done
+    if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
+        echo -e "Download retry count exceeded. Downloading failed." | output_to_log
+        rm -f $DOWNLOAD_PATH
+    fi
+}
+
+# Enable immediate exit on error
+set -e
+
+URL="https://il2bosrd1.cdnvideo.ru/x64/IL2_setup_Great_Battles.exe"
+DOWNLOAD_PATH="/config/IL2_setup_Great_Battles.exe"
+
+echo -e "Downloading IL2 GB Server install executable if required: " | output_to_log
+# Check if the file exists then download.
+if [ -f $DOWNLOAD_PATH ]; then
+    echo -e "File already exists. Download not needed. " | output_to_log
+    echo "Exiting" | output_to_log
+    exit 0
+else
+    download_il2_gb_server
+    echo "Exiting" | output_to_log
+    exit 0
+fi
+
+# You should never get here.
+echo "Exiting" | output_to_log
+exit 0

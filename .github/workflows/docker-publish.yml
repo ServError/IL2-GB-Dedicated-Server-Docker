@@ -48,10 +48,10 @@ jobs:
           context: ./docker
           push: true
           tags: |
-            aterfax/dcs-world-dedicated-server:latest 
-            ghcr.io/aterfax/dcs-world-dedicated-server:latest
-            aterfax/dcs-world-dedicated-server:${{ env.DATE }}
-            ghcr.io/aterfax/dcs-world-dedicated-server:${{ env.DATE }}
+            serverror/il2-gb-dedicated-server:latest 
+            ghcr.io/serverror/il2-gb-dedicated-server:latest
+            serverror/il2-gb-dedicated-server:${{ env.DATE }}
+            ghcr.io/serverror/il2-gb-dedicated-server:${{ env.DATE }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
