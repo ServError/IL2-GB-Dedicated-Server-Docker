@@ -95,21 +95,21 @@ gracetime=$((SECONDS+20))
 while pidof -qx launcher.exe; do
     if grep -q -m 1 'Update status: failed' "$logfile"; then
         echo "Update failed."
-        wine taskkill /im launcher.exe # May be better to simulate closing the window
         break
     elif grep -q -m 1 'Update status: pass' "$logfile"; then
         echo "Update successful."
-        wine taskkill /im launcher.exe
         break
     elif grep -q -m 1 'Current Snapshot version is the same' "$logfile"; then
         echo "Update not needed."
-        wine taskkill /im launcher.exe
         break
     elif [ $SECONDS -gt $gracetime ]; then
-        #If the BOS Updater library hasn't printed to stdout after 30 seconds, nothing is updating (IL2 quirk. It will finally print on exit)
+        #If the BOS Updater library hasn't printed to stdout after 30 seconds, The messages above won't be present (IL2 quirk. It will finally print on exit)
         if ! grep -q -m 1 'BOS update library' "$logfile"; then
-            echo "Update not needed."
-            wine taskkill /im launcher.exe
+            echo "Updater not needed."
+            break
+        #Sometimes even with the library prints, messages above are missing
+        elif grep -q -m 1 'Need to reload config.' "$logfile"; then
+            echo "Updater finished (Status unknown)."
             break
         fi
     fi
