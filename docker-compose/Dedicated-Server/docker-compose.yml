@@ -54,7 +54,7 @@ networks:
 #  il2-0-net: # The bridge driver doesn't play well with IL2's DServer if connecting within the same LAN
 #    driver: macvlan
 #    driver_opts:
-#      parent: eno1
+#      parent: eth0
 #    ipam:
 #      driver: default
 #      config:
