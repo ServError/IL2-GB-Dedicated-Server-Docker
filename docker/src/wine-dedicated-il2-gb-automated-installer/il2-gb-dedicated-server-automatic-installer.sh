@@ -35,6 +35,9 @@ if [[ "$IL2GBAUTOINSTALL" != "0" && "$IL2GBAUTOINSTALL" != "1" ]]; then
     exit 1
 fi
 
+# Remove unneeded shortcuts.
+rm -f /config/Desktop/Run_IL2_GB_Install.desktop
+
 if [ ! -f '/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/launcher.exe' ] || [ "$FORCEREINSTALL" -eq 1 ]; then
     # Start the installer
     cd /config && innoextract -e -m IL2_setup_Great_Battles.exe
@@ -80,9 +83,6 @@ if [ ! -f '/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/
                             "false"
 fi
 
-# Remove unneeded shortcuts.
-rm -f /config/Desktop/Run_IL2_GB_Install.desktop
-
 logfile="/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/launcher.log"
 touch "$logfile"
 
@@ -105,7 +105,7 @@ while pidof -qx launcher.exe; do
     elif [ $SECONDS -gt $gracetime ]; then
         #If the BOS Updater library hasn't printed to stdout after 30 seconds, The messages above won't be present (IL2 quirk. It will finally print on exit)
         if ! grep -q -m 1 'BOS update library' "$logfile"; then
-            echo "Updater not needed."
+            echo "Update not needed."
             break
         #Sometimes even with the library prints, messages above are missing
         elif grep -q -m 1 'Need to reload config.' "$logfile"; then
@@ -116,6 +116,8 @@ while pidof -qx launcher.exe; do
 
     sleep 5
 done
+
+wine taskkill /im launcher.exe
 
 echo
 echo "Install complete."
