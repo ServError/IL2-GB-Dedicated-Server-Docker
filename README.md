@@ -53,6 +53,7 @@ Various automations and helper scripts are provided. In depth configuration and 
 * When installation or update checks complete, the launcher will close automatically.
 * Post server installation, various shortcuts will now also have been added to the desktop for opening the server WebGUI or running and updating the IL2 GB server and opening IL2 GB related directories.
 * Once you have configured your IL2 GB Server installation to your taste, you can set it to auto start by defining the environment variable ``AUTOSTART=1`` and providing a valid DServer SDS file name (with corresponding file placed in the IL2 GB installation's data/Multiplayer directory) in the variable ``AUTOSTARTSDS``.
+* When finished with the server, it can be stopped with ``docker compose stop`` and later restarted with ``docker compose start``. The container and network interfaces can be removed with ``docker compose down``, but files will remain intact and ready for a new instance using the ``up`` command above.
 
 ### Using a self built image
 
