@@ -29,9 +29,6 @@ sudo mkdir -p /config/.cache && sudo chown abc:users -R /config/.cache
 lsiown -R abc:users /config/.wine | output_to_log
 lsiown -R abc:users /config/.cache | output_to_log
 
-export SESSION_MANAGER=local/il2-gb-dedicated-server
-export DISPLAY=:1.0
-
 # Download the latest wine mono
 # Tarball method
 mkdir -p /config/mono/
@@ -55,6 +52,18 @@ else
     tar -xf /config/mono/wine-mono-9.0.0-x86.tar.xz -C /config/mono/
     sudo chown abc:users -R /config/mono
 fi
+
+# Now fetch the SESSION_MANAGER and DISPLAY env vars from the running container so our terminals can spawn where we expect them
+# Could potentially use /usr/bin/with-contenv instead
+
+displayVar=$(ps e -u abc | grep -m 1 "/usr/local/bin/Xvnc " | sed 's#.*/usr/local/bin/Xvnc \([^ ]*\).*#\1#')
+export DISPLAY=$displayVar
+echo "\$DISPLAY=$DISPLAY"
+
+#sessionid=$(ls /tmp/.ICE-unix/)
+#sessionManagerVar="local/il2-gb-dedicated-server:@/tmp/.ICE-unix/$sessionid,unix/il2-gb-dedicated-server:/tmp/.ICE-unix/$sessionid"
+#export SESSION_MANAGER=$sessionManagerVar
+#echo "\$SESSION_MANAGER=$SESSION_MANAGER"
 
 #sudo -u abc winecfg
 
