@@ -83,11 +83,12 @@ if [ ! -f '/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/
                             "false"
 fi
 
-logfile="/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/launcher.log"
+logfile="/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/data/update.log"
 touch "$logfile"
 
 cd "/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game"
-wine launcher.exe > "/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/launcher.log" &
+#wine launcher.exe > "/config/.wine/drive_c/Program Files/IL-2 Sturmovik Great Battles/bin/game/launcher.log" &
+wine launcher.exe &
 
 sleep 10
 
@@ -99,19 +100,19 @@ while pidof -qx launcher.exe; do
     elif grep -q -m 1 'Update status: pass' "$logfile"; then
         echo "Update successful."
         break
-    elif grep -q -m 1 'Current Snapshot version is the same' "$logfile"; then
+    elif grep -q -m 1 'Current snapshot version is the same' "$logfile"; then
         echo "Update not needed."
         break
-    elif [ $SECONDS -gt $gracetime ]; then
-        #If the BOS Updater library hasn't printed to stdout after 30 seconds, The messages above won't be present (IL2 quirk. It will finally print on exit)
-        if ! grep -q -m 1 'BOS update library' "$logfile"; then
-            echo "Update not needed."
-            break
-        #Sometimes even with the library prints, messages above are missing
-        elif grep -q -m 1 'Need to reload config.' "$logfile"; then
-            echo "Updater finished (Status unknown)."
-            break
-        fi
+#    elif [ $SECONDS -gt $gracetime ]; then
+#        #If the BOS Updater library hasn't printed to stdout after 30 seconds, The messages above won't be present (IL2 quirk. It will finally print on exit)
+#        if ! grep -q -m 1 'BOS update library' "$logfile"; then
+#            echo "Update not needed."
+#            break
+#        #Sometimes even with the library prints, messages above are missing
+#        elif grep -q -m 1 'Need to reload config.' "$logfile"; then
+#            echo "Updater finished (Status unknown)."
+#            break
+#        fi
     fi
 
     sleep 5

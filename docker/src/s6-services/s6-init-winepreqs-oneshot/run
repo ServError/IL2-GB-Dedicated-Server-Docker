@@ -70,7 +70,7 @@ echo "\$DISPLAY=$DISPLAY"
 # Give raw packet capabilities to wine
 sudo setcap cap_net_raw+eip /usr/bin/wine-preloader
 
-export WINEDEBUG=fixme-all,-d3d
+export WINEDEBUG=-all
 
 # Install mono from source
 #TODO
