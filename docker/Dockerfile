@@ -6,8 +6,8 @@ FROM lscr.io/linuxserver/webtop:latest
 
 LABEL maintainer="ServError"
 
-# Wine 9.3 64Bit from edge for running EXE
-RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing wine-staging=9.4.1-r0
+# Wine 9.7 64Bit from edge for running EXE
+RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/testing wine-staging=9.7-r0
 # Remaining packages from default repo
 RUN apk add --no-cache mesa-vulkan-swrast freetype wget cabextract xdotool xdg-utils xvfb xvfb-run git python3 python3-dev py3-pip 7zip make cmake gcc g++ gfortran innoextract samba-winbind-clients zenity krb5 xz tcpdump
 
