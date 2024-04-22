@@ -4,7 +4,9 @@
 ![Docker Image Size (tag)](https://img.shields.io/docker/image-size/aterfax/dcs-world-dedicated-server/latest)
 ![Docker Pulls](https://img.shields.io/docker/pulls/aterfax/dcs-world-dedicated-server)
 -->
-## $${\color{red}This Repo is highly experimental, especially regarding networking. Higher ping clients may encounter errors.}$$
+
+> [!CAUTION]
+> This Repo is highly experimental, especially regarding networking. Higher ping clients may encounter errors.
 
 ## **tl;dr?**
 
